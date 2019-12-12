@@ -1,5 +1,7 @@
 from tensorflow import keras
 import numpy as np
+
+__name__ = "__main__"
 data = keras.datasets.imdb
 
 (train_data, train_labels), (test_data, test_labels) = data.load_data(num_words=88000)
@@ -26,7 +28,6 @@ def decode_review(text):
 
 
 def build_model():
-
     # model
     model = keras.Sequential()
     model.add(keras.layers.Embedding(88000, 16)),
@@ -64,27 +65,39 @@ def review_encode(s):
     return encoded
 
 
-model = keras.models.load_model("model.h5")
-# model = build_model()
-with open("test.txt", encoding="utf-8") as f:
-    for line in f.readlines():
-        nline = line.replace(",", "").replace(".", "").replace("(", "").replace(")", "").replace(":", "")\
-            .replace("\"", "").strip().split(" ")
-        encode = review_encode(nline)
-        encode = keras.preprocessing.sequence.pad_sequences([encode], value=word_index["<PAD>"], padding="post",
-                                                   maxlen=250)
-        predict = model.predict(encode)
-        print(line)
-        print(encode)
-        percentage = np.round(predict[0], 2)
-        if 0.00 < percentage <= 0.25:
-            print("This review is very bad!")
-        elif 0.25 < percentage <= 0.50:
-            print("This review is bad!")
-        elif 0.50 < percentage <= 0.75:
-            print("This review is good!")
-        elif 0.75 < percentage <= 1.00:
-            print("This review is excellent!")
-        else:
-            print("Unknown review!")
-        print(percentage)
+def make_prediction():
+    try:
+        f = open("model.h5")
+        model = keras.models.load_model("model.h5")
+    except IOError:
+        model = build_model()
+    finally:
+        f.close()
+
+    with open("test.txt", encoding="utf-8") as f:
+        for line in f.readlines():
+            nline = line.replace(",", "").replace(".", "").replace("(", "").replace(")", "").replace(":", "") \
+                .replace("\"", "").strip().split(" ")
+            encode = review_encode(nline)
+            encode = keras.preprocessing.sequence.pad_sequences([encode], value=word_index["<PAD>"], padding="post",
+                                                                maxlen=250)
+            predict = model.predict(encode)
+            print(line)
+            print(encode)
+            percentage = np.round(predict[0], 2)
+            if 0.00 < percentage <= 0.25:
+                print("This review is very bad!")
+            elif 0.25 < percentage <= 0.50:
+                print("This review is bad!")
+            elif 0.50 < percentage <= 0.75:
+                print("This review is good!")
+            elif 0.75 < percentage <= 1.00:
+                print("This review is excellent!")
+            else:
+                print("Unknown review!")
+            print(percentage)
+
+
+if __name__ == "__main__":
+    make_prediction()
+
